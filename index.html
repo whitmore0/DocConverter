@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocConverter</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>DocConverter</h1>
+        <p>Convert your documents between different formats</p>
+
+        <div class="upload-area">
+            <div class="upload-box">
+                <p>Drag & drop files here or click to select</p>
+                <input type="file" id="fileInput" multiple>
+            </div>
+        </div>
+
+        <div class="conversion-options">
+            <label for="outputFormat">Convert to:</label>
+            <select id="outputFormat">
+                <option value="">Select format</option>
+                <option value="pdf">PDF</option>
+                <option value="docx">Word Document</option>
+                <option value="html">HTML</option>
+                <option value="md">Markdown</option>
+            </select>
+        </div>
+
+        <button id="convertBtn" disabled>Convert Files</button>
+
+        <div id="results"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

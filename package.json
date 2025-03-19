@@ -1,0 +1,13 @@
+{
+  "name": "docconverter",
+  "version": "0.1.0",
+  "description": "A simple document format converter",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": ["document", "converter", "pdf", "docx", "markdown"],
+  "author": "whitmore0",
+  "license": "MIT"
+}

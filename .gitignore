@@ -1,0 +1,8 @@
+node_modules/
+.claude
+*.log
+dist/
+CLAUDE.md
+.env
+uploads/
+*.tmp
