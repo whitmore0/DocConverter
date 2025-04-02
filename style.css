@@ -144,3 +144,40 @@ p {
     color: #666;
     font-size: 0.9em;
 }
+
+.download-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.download-btn:hover {
+    background: #218838;
+}
+
+.error {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #f5c6cb;
+}
+
+.converting {
+    text-align: center;
+    padding: 20px;
+    color: #667eea;
+}
+
+.selected-files h3,
+.conversion-results h3 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+}

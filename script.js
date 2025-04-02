@@ -78,30 +78,83 @@ document.addEventListener('DOMContentLoaded', function() {
         convertBtn.disabled = selectedFiles.length === 0 || !outputFormat.value;
     }
 
-    function convertFiles() {
-        results.innerHTML = '<div class="converting"><h3>Converting files...</h3></div>';
+    async function convertFiles() {
+        results.innerHTML = '<div class="converting"><h3>Uploading and converting files...</h3></div>';
 
-        // Simulate conversion process
-        setTimeout(() => {
+        try {
+            // First upload the files
+            const formData = new FormData();
+            selectedFiles.forEach(file => {
+                formData.append('files', file);
+            });
+
+            const uploadResponse = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!uploadResponse.ok) {
+                throw new Error('Failed to upload files');
+            }
+
+            const uploadResult = await uploadResponse.json();
+
+            // Then convert each file
             const conversionResults = document.createElement('div');
             conversionResults.className = 'conversion-results';
             conversionResults.innerHTML = '<h3>Conversion Results:</h3>';
 
-            selectedFiles.forEach(file => {
+            for (const fileInfo of uploadResult.files) {
                 const resultItem = document.createElement('div');
                 resultItem.className = 'file-item';
-                const outputName = getOutputFileName(file.name, outputFormat.value);
-                resultItem.innerHTML = `
-                    <h4>${outputName}</h4>
-                    <p>✅ Conversion completed successfully</p>
-                    <button class="download-btn" onclick="downloadFile('${outputName}')">Download</button>
-                `;
+
+                try {
+                    const convertResponse = await fetch('/convert', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            filename: fileInfo.filename,
+                            targetFormat: outputFormat.value
+                        })
+                    });
+
+                    const convertResult = await convertResponse.json();
+
+                    if (convertResult.success) {
+                        resultItem.innerHTML = `
+                            <h4>${fileInfo.originalName}</h4>
+                            <p>✅ ${convertResult.message}</p>
+                            <button class="download-btn" onclick="downloadFile('${convertResult.outputFile}')">Download</button>
+                        `;
+                    } else {
+                        resultItem.innerHTML = `
+                            <h4>${fileInfo.originalName}</h4>
+                            <p>❌ Error: ${convertResult.error}</p>
+                        `;
+                    }
+                } catch (error) {
+                    resultItem.innerHTML = `
+                        <h4>${fileInfo.originalName}</h4>
+                        <p>❌ Conversion failed</p>
+                    `;
+                }
+
                 conversionResults.appendChild(resultItem);
-            });
+            }
 
             results.innerHTML = '';
             results.appendChild(conversionResults);
-        }, 2000);
+
+        } catch (error) {
+            results.innerHTML = `
+                <div class="error">
+                    <h3>Error</h3>
+                    <p>Failed to process files: ${error.message}</p>
+                </div>
+            `;
+        }
     }
 
     function formatFileSize(bytes) {
@@ -125,6 +178,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Global function for download button
     window.downloadFile = function(filename) {
-        alert('Download functionality will be implemented in the backend. File: ' + filename);
+        window.open(`/download/${filename}`, '_blank');
     };
 });
