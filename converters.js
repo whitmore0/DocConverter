@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { marked } = require('marked');
+const puppeteer = require('puppeteer');
 
 class DocumentConverter {
     constructor() {
@@ -112,6 +113,81 @@ ${htmlContent}
         }
     }
 
+    async convertHtmlToPdf(inputPath, outputPath) {
+        let browser;
+        try {
+            browser = await puppeteer.launch({
+                headless: 'new',
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+
+            const page = await browser.newPage();
+
+            // Read HTML content
+            const htmlContent = fs.readFileSync(inputPath, 'utf8');
+            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+
+            // Generate PDF
+            await page.pdf({
+                path: outputPath,
+                format: 'A4',
+                printBackground: true,
+                margin: {
+                    top: '1cm',
+                    right: '1cm',
+                    bottom: '1cm',
+                    left: '1cm'
+                }
+            });
+
+            return {
+                success: true,
+                outputPath: outputPath,
+                message: 'HTML converted to PDF successfully'
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error.message
+            };
+        } finally {
+            if (browser) {
+                await browser.close();
+            }
+        }
+    }
+
+    async convertMarkdownToPdf(inputPath, outputPath) {
+        try {
+            // First convert markdown to HTML
+            const tempHtmlPath = outputPath.replace('.pdf', '.tmp.html');
+            const htmlResult = await this.convertMarkdownToHtml(inputPath, tempHtmlPath);
+
+            if (!htmlResult.success) {
+                return htmlResult;
+            }
+
+            // Then convert HTML to PDF
+            const pdfResult = await this.convertHtmlToPdf(tempHtmlPath, outputPath);
+
+            // Clean up temporary HTML file
+            if (fs.existsSync(tempHtmlPath)) {
+                fs.unlinkSync(tempHtmlPath);
+            }
+
+            if (pdfResult.success) {
+                pdfResult.message = 'Markdown converted to PDF successfully';
+            }
+
+            return pdfResult;
+        } catch (error) {
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
     getOutputPath(originalPath, targetFormat) {
         const basename = path.basename(originalPath, path.extname(originalPath));
         const timestamp = Date.now();
@@ -142,6 +218,13 @@ ${htmlContent}
             case 'html_to_md':
             case 'html_to_markdown':
                 return await this.convertHtmlToMarkdown(inputPath, outputPath);
+
+            case 'html_to_pdf':
+                return await this.convertHtmlToPdf(inputPath, outputPath);
+
+            case 'md_to_pdf':
+            case 'markdown_to_pdf':
+                return await this.convertMarkdownToPdf(inputPath, outputPath);
 
             default:
                 return {
