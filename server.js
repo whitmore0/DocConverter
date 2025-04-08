@@ -29,6 +29,25 @@ const upload = multer({
     storage: storage,
     limits: {
         fileSize: 10 * 1024 * 1024 // 10MB limit
+    },
+    fileFilter: function (req, file, cb) {
+        // Accept only specific file types
+        const allowedTypes = [
+            'text/plain',
+            'text/markdown',
+            'text/html',
+            'application/pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ];
+
+        const allowedExtensions = ['.txt', '.md', '.html', '.htm', '.pdf', '.docx'];
+        const fileExt = path.extname(file.originalname).toLowerCase();
+
+        if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(fileExt)) {
+            cb(null, true);
+        } else {
+            cb(new Error(`File type not supported: ${file.mimetype || fileExt}. Supported types: txt, md, html, pdf, docx`), false);
+        }
     }
 });
 
@@ -52,6 +71,18 @@ app.post('/upload', upload.array('files'), (req, res) => {
         message: 'Files uploaded successfully',
         files: fileInfo
     });
+});
+
+// Error handling middleware for multer
+app.use((error, req, res, next) => {
+    if (error instanceof multer.MulterError) {
+        if (error.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ error: 'File too large. Maximum size is 10MB.' });
+        }
+    } else if (error.message.includes('File type not supported')) {
+        return res.status(400).json({ error: error.message });
+    }
+    next(error);
 });
 
 // Convert endpoint
